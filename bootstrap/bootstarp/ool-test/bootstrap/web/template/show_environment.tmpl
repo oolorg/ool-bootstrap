@@ -1,0 +1,54 @@
+<html>
+<head>
+<meta content-type="text/html" charset="UTF-8">
+<title>Bootstrap for Verification</title>
+<link rel="stylesheet" type="text/css" href="/static/css/sample.css">
+<script src="/static/js/common.js"></script>
+</head>
+
+<body>
+<form id="form" method="POST">
+<header>Bootstrap for Verification</header>
+<div id="container">
+
+<table class="sample1">
+    <caption>Server Infomation</caption>
+<!--    <th>Stack-ID</th> -->
+    <th>Host</th>
+    <th>Stack-ID</th>
+    <th>IP</th>
+    <th>is Master</th>
+    <th>Action</th>
+<!--  </tr> -->
+  ${environment}
+</table>
+
+<table class="sample1" style="width:60%">
+  <caption>Network Infomation</caption>
+  <tr>
+    <th>Netns</th>
+    <tr>
+      <td>
+         ${networknamespace}
+      </td>
+    </tr>
+  <tr>
+</table>
+
+${extention}
+
+<br>
+<table style="width:20%" align="right">
+<tr>
+<td style="width:50%" align="right">
+<button type="button" class="sample" onclick="page_load('/cgi-bin/index.py','GET',null)">OK</button>
+</td>
+</tr>
+</table>
+<br>
+</div>
+<footer>Copyright (C) 2013 Okinawa Open Laboratory All Rights Reserved.</footer>
+</form>
+</body>
+</html>
+

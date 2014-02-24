@@ -1,0 +1,43 @@
+<html>
+<head>
+<meta content-type="text/html" charset="UTF-8">
+<title>Bootstrap for Verification</title>
+<link rel="stylesheet" type="text/css" href="/static/css/sample.css">
+<script src="/static/js/common.js"></script>
+</head>
+
+<body>
+<form id="form" method="POST">
+<header>Bootstrap for Verification</header>
+<div id="container">
+
+${scenario_name}
+<table class="sample1">
+  <tr>
+    <th width="30%">Key</th>
+    <th width="70%">Value</th>
+  </tr>
+  ${scenario}
+</table>
+
+<br>
+
+<table style="width:20%" align="right">
+<tr>
+<td style="width:50%">
+<button type="button" class="sample" onclick="page_load('/cgi-bin/build_scenario.py','POST','form')">Cancel</button>
+</td>
+<td style="width:50%">
+<button type="button" class="sample" onclick="if(show_dialog('Do you Save The Scenario?')){page_load('/cgi-bin/edit_scenario.py','POST','form')}">Save</button>
+</td>
+</tr>
+</table>
+<br>
+<input type="hidden" name="scenario" value="${select_scenario}"/>
+<input type="hidden" name="is_save" value="True"/>
+</div>
+<footer>Copyright (C) 2013 Okinawa Open Laboratory All Rights Reserved.</footer>
+</form>
+</body>
+</html>
+

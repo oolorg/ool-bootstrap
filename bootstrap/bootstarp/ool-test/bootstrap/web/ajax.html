@@ -1,0 +1,47 @@
+<html>
+<head>
+<meta content-type="text/html" charset="UTF-8">
+<title>Bootstrap for Verification</title>
+<link rel="stylesheet" type="text/css" href="css/sample.css">
+<script src="js/prototype.js"></script> 
+<script src="js/ajax.js"></script>
+</head>
+<body>
+<form id="form" method="POST">
+<header>Bootstrap for Verification</header>
+<div id="container">
+
+<table class="sample2">
+<tr><td><button type="button" class="sample" onclick="page_load('cgi-bin/create_scenario.py','POST','form')">Create Scenario</button></td></tr>
+</table>
+
+
+<table class="sample1">
+  <tr>
+    <th>Scenario</th>
+    <th>Status</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+    <td>ping</td>
+    <td id="test">Active</td>
+    <td><button type="button" class="sample" onclick="if(show_dialog('Do you validate?')){page_load('./index.html','POST','form')}">Verify</button>
+        <button type="button" class="sample" onclick="page_load('cgi-bin/graph_test.py','POST','form')">Show Result</button>
+        <button type="button" class="sample" onclick="if(show_dialog('Do you want to delete this verification environment?')){page_load('cgi-bin/scenario_delete.py?scenario=ping','GET',null)}">Delete</button>
+    </td>
+  </tr>
+  <tr>
+    <td>traceroute</td>
+    <td id="test2">Validating<br><progress max="100">検証APを実行中です</progress></td>
+    <td>
+    </td>
+  </tr>
+</table>
+
+</div>
+<!-- <footer>Copyright (C) 2013 Okinawa Open Laboratory All Rights Reserved.</footer> -->
+<footer>Copyright (C) 2013 Ryo.Kurahashi All Rights Reserved.</footer>
+</form>
+</body>
+</html>
+

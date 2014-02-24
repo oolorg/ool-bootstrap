@@ -1,0 +1,177 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Template Ping_manager_Instance: This template builds a manager to manage the verification and validation content for VM.",
+
+  "Parameters" : {
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String"
+    },
+    "ProvHost" : {
+      "Type" : "String"
+    },
+    "SubnetId" : {
+      "Type" : "String",
+      "Description" : "Id of an existing subnet"
+    },
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "m1.tiny", "m1.small", "m1.medium", "m1.large", "m1.xlarge" ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "LinuxDistribution": {
+      "Default": "U12",
+      "Description" : "Distribution of choice",
+      "Type": "String",
+      "AllowedValues" : [ "U12" ]
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "m1.tiny"    : { "Arch" : "64" },
+      "m1.small"    : { "Arch" : "64" },
+      "m1.medium"    : { "Arch" : "64" },
+      "m1.large"   : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" }
+    },
+    "DistroArch2AMI": {
+      "U12"      : { "64" : "U12-x86_64-cfntools-review" }
+    }
+  },
+
+  "Resources" : {
+    "PingMan": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "services" : {
+              "sysvinit" : {
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "SubnetId" : { "Ref" : "SubnetId" },
+        "AvailabilityZone" : {"Ref": "ProvHost"},
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "ifconfig eth0 mtu 1422\n",
+          "mkdir /usr/lib/verification\n",
+          "cat > /usr/lib/verification/manage.sh <<EOF\n",
+          "#!/bin/bash\n",
+          "\n",
+          "set -e\n",
+          "\n",
+          "CONF=\"ipaddress.txt\"\n",
+          "IPADDRESS=(\\`cat \"\\$CONF\"\\`)\n",
+          "\n",
+          "if [ -e \"/usr/lib/verification/result.txt\" ]; then\n",
+          "   rm -r \"/usr/lib/verification/result.txt\"\n",
+          "fi\n",
+          "\n",
+          "CURL_ORG=\"curl -X POST 'http://IPADDRESS:18000/cgi-bin/verify.py' -d 'POST_DATA'\"\n",
+          "POST=\"\"\n",
+          "COUNT=1\n",
+          "\n",
+          "for IP in \\${IPADDRESS[@]}\n",
+          "do\n",
+          "   if [ \\$COUNT -ne 1 ]; then\n",
+          "       POST+=\"&\"\n",
+          "   fi\n",
+          "   ip=\"ip\"\\$COUNT\n",
+          "   POST+=\\$ip\"=\"\\$IP\n",
+          "   let COUNT=\\${COUNT}+1\n",
+          "done\n",
+          "\n",
+          "POST+=\"&selfip=\"\n",
+          "\n",
+          "echo \"--------------------------------------------------\" >> result.txt\n",
+          "for IP in \\${IPADDRESS[@]}\n",
+          "do\n",
+          "    POST_DATA=\\$POST\n",
+          "    CURL=\\$CURL_ORG\n",
+          "    POST_DATA+=\\$IP\n",
+          "    CURL=\\`echo \\${CURL/POST_DATA/\\$POST_DATA}\\`\n",
+          "    CURL=\\`echo \\${CURL/IPADDRESS/\\$IP}\\`\n",
+          "    eval \\$CURL >> ./result.txt\n",
+          "    echo \"--------------------------------------------------\" >> result.txt\n",
+          "done\n",
+          "/usr/bin/python ./cgi-bin/verify_result.py\n",
+          "EOF\n",
+          "chmod +x /usr/lib/verification/manage.sh\n",
+          "mkdir /usr/lib/verification/cgi-bin\n",
+          "chown -R openstack:openstack /usr/lib/verification/cgi-bin\n",
+          "cat > /usr/lib/verification/cgi-bin/execute.py <<EOF\n",
+          "#!/usr/bin/env python\n",
+          "\n",
+          "import subprocess\n",
+          "import os\n",
+          "\n",
+          "subprocess.Popen([\"/usr/lib/verification/manage.sh\"])\n",
+          "EOF\n",
+          "chmod 755 /usr/lib/verification/cgi-bin/execute.py\n",
+          "cat > /usr/lib/verification/cgi-bin/verify_result.py <<EOF\n",
+          "#!/usr/bin/env python\n",
+          "\n",
+          "import os\n",
+          "import sys\n",
+          "import datetime\n",
+          "from string import Template\n",
+          "\n",
+          "def get_now():\n",
+          "        now = datetime.datetime.now()\n",
+          "        return now.strftime(\"%Y/%m/%d %H:%M:%S\")\n",
+          "\n",
+          "f=open(\"/usr/lib/verification/template/result.tmpl\")\n",
+          "data=f.read()\n",
+          "f.close()\n",
+          "tmpl=Template(unicode(data,\"utf-8\",\"ignore\"))\n",
+          "f1=open(\"/usr/lib/verification/result.txt\")\n",
+          "ret=\"\"\n",
+          "for line in f1:\n",
+          "    ret += line + \"<br>\"\n",  
+          "f1.close()\n",
+          "ret+=\"<br>Creation Date : \" + get_now()\n",
+          "body=tmpl.substitute({\"body\":ret.encode(\"utf-8\")})\n",
+          "fw=open(\"result.html\", \"w\")\n",
+          "fw.write(body)\n",
+          "fw.close()\n",
+          "EOF\n",
+          "chmod 755 /usr/lib/verification/cgi-bin/verify_result.py\n",
+          "mkdir /usr/lib/verification/template\n",
+          "chown -R openstack:openstack /usr/lib/verification/template\n",
+          "cat > /usr/lib/verification/template/result.tmpl <<EOF\n",
+          "<html>\n",
+          "<head>\n",
+          "<meta content-type=\"text/html\" charset=\"UTF-8\">\n",
+          "<title>Bootstrap for Verification</title>\n",
+          "</head>\n",
+          "<body>\n",
+          "<div align=\"center\">\n",
+          "\\${body}\n",
+          "</div>\n",
+          "</body>\n",
+          "</html>\n",
+          "EOF\n",
+          "chmod -R 777 /usr/lib/verification\n",
+          "sudo sh -c \"echo 'StrictHostKeyChecking=no' >> /etc/ssh/ssh_config\"\n"
+        ]]}}
+      }
+    }
+  },
+
+  "Outputs" : {
+  }
+}

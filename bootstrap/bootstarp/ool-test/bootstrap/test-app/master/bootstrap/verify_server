@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+import os
+import cgi
+import urlparse
+import BaseHTTPServer,CGIHTTPServer
+
+#class Handle(CGIHTTPServer.CGIHTTPRequestHandler):
+
+def main():
+   server_class = BaseHTTPServer.HTTPServer
+   httpd = server_class(("0.0.0.0", 18000), CGIHTTPServer.CGIHTTPRequestHandler)
+   httpd.serve_forever()
+
+
+if __name__ == '__main__':
+	main()

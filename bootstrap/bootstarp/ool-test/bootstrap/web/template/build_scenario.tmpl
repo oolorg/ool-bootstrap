@@ -1,0 +1,69 @@
+<html>
+<head>
+<meta content-type="text/html" charset="UTF-8">
+<title>Create Scenario</title>
+<link rel="stylesheet" type="text/css" href="/static/css/sample.css">
+<link rel="stylesheet" type="text/css" href="/static/css/dropdown.css">
+<script src="/static/js/common.js"></script>
+<script language="javascript">
+<!--
+    function scenario_check(){
+        var value = document.getElementById("scenario").value;
+        if(value == null || value == ""){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+//-->
+</script>
+</head>
+<body>
+<form id="form" method="POST">
+<header>Bootstrap for Verification</header>
+<div id="container">
+
+<table style="width:70%" align="center">
+<tr>
+<td style="width:40%">
+<ul id="menu">
+	<li>
+		<a href="#">select scenario</a>
+		<ul>
+<!--			<li><span onclick="set_value('scenario','ping')"><a href="" onclick="return false;">ping</a></span></li>
+			<li><span onclick="set_value('scenario','traceroute')"><a href="" onclick="return false;">traceroute</a></span></li>
+			<li><span onclick="set_value('scenario','iperf')"><a href="" onclick="return false;">iperf</a></span></li>
+-->
+			${scenario}			
+		</ul>
+	</li>
+</ul>
+</td>
+<td style="width:60%" align="right">
+：&nbsp;<input class="text" type="text" id="scenario" name="scenario" value="${select_scenario}" readonly>
+<!-- <a>Show Scenario</a> -->
+<button type="button" class="sample" onclick="if(scenario_check()){page_load('/cgi-bin/edit_scenario.py','POST','form')}else{alert('Please select scenario!')}">Detail</button>
+</td>
+</tr>
+</table>
+
+<br>
+
+<table style="width:20%" align="right">
+<tr>
+<td style="width:50%">
+<button type="button" class="sample" onclick="page_load('/cgi-bin/index.py','GET',null)">Cancel</button>
+</td>
+<td style="width:50%">
+<button type="button" class="sample" value="Build" onclick="if(show_dialog('Do you build verification Environment?')){if(scenario_check()){page_load('/cgi-bin/build_exec.py','POST','form')}else{alert('Please select scenario!')}}">Build</button>
+</td>
+</tr>
+</table>
+<br>
+</div>
+<footer>Copyright (C) 2013 Okinawa Open Laboratory All Rights Reserved.</footer>
+</form>
+</body>
+</html>
+

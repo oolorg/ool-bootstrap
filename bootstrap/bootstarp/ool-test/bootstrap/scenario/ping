@@ -1,0 +1,11 @@
+[AUTH]
+ssh_user = root
+
+[AP]
+manager_template = Ping_Instance_deb_manager.template
+agent_template = Ping_Instance_deb_agent.template
+
+[INSTANCE]
+instance_type = m1.tiny
+key_name = key1222
+subnet_name = private1_sub1

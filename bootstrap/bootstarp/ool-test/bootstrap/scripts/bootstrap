@@ -1,0 +1,107 @@
+#!/bin/bash
+
+SCRIPT_HOME=$(cd $(dirname $0);pwd)
+source $SCRIPT_HOME/modules
+
+OUTPUT_IPADDRESS=${1:-""}
+NETNS_ID=${2:-""}
+key_name=${3:-""}
+ssh_user=${4:-""}
+MANAGER_IP=${5:-""}
+
+VERIFY_DIR="/usr/lib/verification"
+
+function show_options () {
+    echo "Options:"
+    echo "bootstrap <ipaddress.txt> <netns> <key_name> <ssh_user> <manager_ip>"
+    echo "**********************************************"
+    echo "             bootstrap options."
+    echo "**********************************************"
+    echo "ipaddress.txt       =<ipaddress file fullpath>"
+    echo "netns               =<network namespace name>"
+    echo "key_name            =<nova keypair name>"
+    echo "ssh_user            =<exec user>"
+    echo "**********************************************"
+    exit 1
+}
+
+function check_input() {
+  if [ -z "$OUTPUT_IPADDRESS" -o -z "$NETNS_ID" -o -z "$key_name" -o -z "$ssh_user" -o -z "$MANAGER_IP" ]; then
+    show_options
+  fi
+  if [ ! -e "$OUTPUT_IPADDRESS" ]; then
+    echo "No such file."
+    show_options
+  fi
+}
+
+function exec_scp() {
+   while :
+   do
+      sudo ip netns exec ${NETNS_ID} scp -oStrictHostKeyChecking=no -i "${SCRIPT_HOME}/../keys/${key_name}.pem" ${1} ${ssh_user}@${2}:${3} >/dev/null 2>&1
+      if [ $? -eq "0" ]; then
+         echo "   : )"
+         break
+      fi
+      sleep 2 
+   done
+}
+
+function send_ipaddress() {
+   echo "Transfer of App IPs information to Manager.."
+   exec_scp ${OUTPUT_IPADDRESS} ${MANAGER_IP} "${VERIFY_DIR}/ipaddress.txt"
+}
+
+
+VERIFY_SERVICE_MNG_PKG="${SCRIPT_HOME}/../test-app/master/bootstrap.tar.gz"
+VERIFY_SERVICE_AG_PKG="${SCRIPT_HOME}/../test-app/agent/bootstrap.tar.gz"
+function send_service_pkg() {
+   echo "Transfer of Verify-Server Package to Virtual machine.."
+   exec_scp ${VERIFY_SERVICE_MNG_PKG} ${MANAGER_IP} "/tmp/"
+   CONF="${OUTPUT_IPADDRESS}"
+   IP_CONF=(`cat "$CONF"`)
+   for IP in ${IP_CONF[@]}
+   do
+      exec_scp ${VERIFY_SERVICE_AG_PKG} ${IP} "/tmp/"
+   done
+}
+
+VERIFY_SERVICE_UNCOMPRESS="/bin/tar xvf /tmp/bootstrap.tar.gz -C /tmp/"
+VERIFI_SERVICE_INSTALL="/tmp/bootstrap/install.sh ${VERIFY_DIR}"
+function exec_service_install() {
+   echo "Verification Server install.."
+   sudo ip netns exec ${NETNS_ID} ssh -oStrictHostKeyChecking=no -i "${SCRIPT_HOME}/../keys/${key_name}.pem" ${ssh_user}@${MANAGER_IP} ${VERIFY_SERVICE_UNCOMPRESS} 1>/dev/null 2>/dev/null
+   sudo ip netns exec ${NETNS_ID} ssh -oStrictHostKeyChecking=no -i "${SCRIPT_HOME}/../keys/${key_name}.pem" ${ssh_user}@${MANAGER_IP} ${VERIFI_SERVICE_INSTALL} 1>/dev/null 2>/dev/null &
+   echo "   : )"
+   CONF="${OUTPUT_IPADDRESS}"
+   IP_CONF=(`cat "$CONF"`)
+   for IP in ${IP_CONF[@]}
+   do
+     sudo ip netns exec ${NETNS_ID} ssh -oStrictHostKeyChecking=no -i "${SCRIPT_HOME}/../keys/${key_name}.pem" ${ssh_user}@${IP} ${VERIFY_SERVICE_UNCOMPRESS} >/dev/null 2>&1
+     sudo ip netns exec ${NETNS_ID} ssh -oStrictHostKeyChecking=no -i "${SCRIPT_HOME}/../keys/${key_name}.pem" ${ssh_user}@${IP} ${VERIFI_SERVICE_INSTALL} >/dev/null 2>&1 &
+     echo "   : )"
+   done
+}
+
+check_input
+
+send_service_pkg &
+progress
+
+sleep 1
+
+exec_service_install &
+progress
+
+sleep 1
+
+send_ipaddress &
+progress
+
+sleep 1
+
+if [ -e ${OUTPUT_IPADDRESS} ]; then
+   rm -r ${OUTPUT_IPADDRESS}
+fi
+
+exit 0

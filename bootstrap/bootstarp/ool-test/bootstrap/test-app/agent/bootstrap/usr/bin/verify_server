@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+import os
+import signal
+import sys
+import subprocess
+
+if __name__ == "__main__":
+	sys.path.append(sys.argv[1])
+	os.chdir(sys.argv[1])
+#	log_path=sys.argv[1] + "/" + sys.argv[2] + ".log"
+        log_path="/var/log/bootstrap/" + sys.argv[2] + ".log"
+	try:
+			f=open(log_path, "w")
+	except IOError:
+			sys.exit(1)
+	try:
+		subprocess.Popen(["/usr/bin/python", sys.argv[1] + "/" + sys.argv[2]], stdout=f, stderr=f)
+	except OSError:
+			sys.exit(1)
+

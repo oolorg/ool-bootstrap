@@ -1,0 +1,218 @@
+body {
+	width:100%;
+	margin:0;
+	padding:0;
+	color:#666;
+	font:90%/1.6 "Lucida Sans Unicode", "Lucida Grande", Verdana, Tahoma, Arial, sans-serif;
+	background: #CCDBFA;
+}
+header {
+	width: 700px;
+	margin: 0px auto;
+	padding: 30px 0px;
+	color: #5B69AF;
+}
+#container {
+	width: 640px;
+	margin: 0px auto;
+	padding: 30px;
+	background: #FFF;
+	border: 1px solid #E0DADD;
+}
+header, article, footer, aside, time ,nav { display: block; }
+p {
+	margin-top: 30px;
+	margin-bottom: 0.5em;
+}
+h1 {
+	line-height: 1em;
+	font-size: 200%;
+}
+h2 {
+	line-height: 1em;
+	font-size: 120%;
+}
+pre {
+	color: #70A2E3;
+	margin-bottom: 2em;
+	width: 620px;
+	background:#E3EFFB;
+	padding: 10px;
+}
+footer {
+	width: 700px;
+	margin: 0px auto;
+	color: #FFF;
+	text-align: center;
+	padding: 10px 0px;
+	background: #000;
+	font: bold 80%/1em Arial, Helvetica, sans-serif;
+}
+.c-both {
+	clear: both;
+	padding: 0px;
+	margin: 0px;
+}
+
+/* color */
+.red{
+	color: #F00;
+}
+.green{
+	color: #6C9;
+}
+
+/* link */
+a {
+	color: #F90;
+	text-decoration: underline;
+}
+a:hover {
+	color: #F66;
+}
+
+/* Table */
+table.sample1 {
+	width: 100%;
+	margin:10px 0px 20px;
+	border-top: 1px solid #CCC;
+	border-left: 1px solid #CCC;
+	border-spacing:0px;
+}
+table.sample1 tr td {
+	text-align: center;
+	font-size: 12px;
+	border-bottom: 1px solid #CCC;
+	border-right: 1px solid #CCC;
+	padding: 7px;
+}
+
+table.sample1 tr th {
+	font-size: 12px;
+	border-bottom: 1px solid #CCC;
+	border-right: 1px solid #CCC;
+	padding: 7px;
+	background: #E6EAFF;
+}
+
+table.sample1 caption {
+	font-size: 90%;
+	font-weight: bold;
+	width: 100%;
+	border-bottom: 1px dotted #6F87FF;
+	margin-bottom: 10px;
+	text-align: left;
+	color: #6F87FF;
+}
+
+table.sample2 {
+	width: 100%;
+}
+
+table.sample2 td{
+	text-align: right;
+}
+
+/* button */
+button.sample {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #ffffff;
+	padding: 4px 15px;
+	background: -moz-linear-gradient(
+		top,
+		#a8a8a8 0%,
+		#3b3b3b 50%,
+		#242424 50%,
+		#000000);
+	background: -webkit-gradient(
+		linear, left top, left bottom, 
+		from(#a8a8a8),
+		color-stop(0.50, #3b3b3b),
+		color-stop(0.50, #242424),
+		to(#000000));
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	border-radius: 6px;
+	border: 1px solid #000000;
+	-moz-box-shadow:
+		0px 1px 3px rgba(000,000,000,0.2),
+		inset 0px 0px 1px rgba(255,255,255,0.6);
+	-webkit-box-shadow:
+		0px 1px 3px rgba(000,000,000,0.2),
+		inset 0px 0px 1px rgba(255,255,255,0.6);
+	box-shadow:
+		0px 1px 3px rgba(000,000,000,0.2),
+		inset 0px 0px 1px rgba(255,255,255,0.6);
+	text-shadow:
+		0px -1px 0px rgba(000,000,000,1),
+		0px 1px 0px rgba(255,255,255,0.2);
+}
+
+button.sample:hover {
+	cursor:pointer;
+}
+
+button.sample:active {
+	background: #111111;
+	padding: 5px 16px 4px;
+}
+
+button.sample[disabled], button.sample[disabled]:hover, button.sample[disabled]:active {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color: #999;
+        padding: 4px 15px;
+        background: #fafafa;
+        -moz-border-radius: 6px;
+        -webkit-border-radius: 6px;
+        border-radius: 6px;
+        border: 1px solid #eaeaea;
+        -moz-box-shadow:
+                0px 1px 3px rgba(000,000,000,0.2),
+                inset 0px 0px 1px rgba(255,255,255,0.6);
+        -webkit-box-shadow:
+                0px 1px 3px rgba(000,000,000,0.2),
+                inset 0px 0px 1px rgba(255,255,255,0.6);
+        box-shadow:
+                none;
+        text-shadow:
+                none;
+	cursor:default;
+}
+
+.overlay {
+        position: fixed;
+        display:none;
+        width: 100%;
+        height: 100%;
+        top: 0%;
+        left: 0%;
+        z-index: 9998;
+        background: rgba(240,240,240,0.5);
+}
+
+.loading {
+        position: fixed;
+/*        display: none; */
+        display:table-cell;
+        width: 40px;
+        height: 40px;
+        top: 45%;
+        left: 50%;
+        z-index: 9999;
+        text-align: center;
+        vertical-align: middle;
+        background: rgba(240,240,240,0.2);
+}
+
+.loading img {
+        vertical-align: middle;
+	opacity: 0.4;
+	border-radius: 8px;
+	top: 50%;
+	left: 50%;
+        width: 40px;
+        height: 40px;
+}
+

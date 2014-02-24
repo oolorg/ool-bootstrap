@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#set -e
+SCRIPT_HOME=$(cd $(dirname $0);pwd)
+
+ret=`uuidgen | sed s/-//g | cut -c 1-10`
+echo $ret 
+echo "End : "$(date)
+
+function check_availability_hosts() {
+     TMP=$(sudo /usr/bin/python "${SCRIPT_HOME}/db_nova_sh.py" "select" "select count(*) from aggregate_metadata where deleted=0 and value='az-${1}'")
+    if [ $TMP -eq 0 ]; then
+       echo "1"
+       exit 0
+    fi
+    echo "0"
+}
+
+#ADMIN=$(sed 's/[[:space:]]//g' "/etc/keystone/keystone.conf" | grep ^admin_token= | cut -d'=' -f2)
+#echo $ADMIN
+
+HOSTS=$(sudo /usr/bin/python "${SCRIPT_HOME}/db_nova_sh.py" "select" "select host from services where disabled=0 and deleted=0 and \`binary\`='nova-compute'")
+
+for HOST in $HOSTS; do
+    echo "Loading Hosts ($HOST)"
+    if [ "1" = `check_availability_hosts $HOST` ]; then
+        echo $HOST
+    fi
+done

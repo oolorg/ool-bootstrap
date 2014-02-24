@@ -1,0 +1,34 @@
+<html>
+<head>
+<meta content-type="text/html" charset="UTF-8">
+<title>Bootstrap for Verification</title>
+<link rel="stylesheet" type="text/css" href="/static/css/sample.css">
+<script src="/static/js/common.js"></script>
+<script src="/static/js/jquery-2.0.3.js"></script>
+<script>
+  jQuery(window).ready(function() {
+     jQuery('#overlay').delay(10).fadeIn('slow');
+/*     jQuery('#loading').delay(10).fadeIn('slow'); */
+  });
+  jQuery(window).load(function() {
+/*      jQuery('#loading').fadeOut('fast'); */
+      jQuery('#overlay').fadeOut('fast');
+  });
+</script>
+<body>
+<div class="overlay" id="overlay">
+  <div class="loading" id="loading"> 
+    <img src="/static/images/gif-load.gif" style="text-align:center;">
+  </div>
+</div>
+<iframe id="fresult" src="/cgi-bin/show_result.py?${query}" width="80%" height="90%" style="display: block; margin: 0px auto;"></iframe>
+<table style="width:20%" align="right">
+<tr>
+<td style="width:50%" align="left">
+<button type="button" class="sample" onclick="page_load('/cgi-bin/index.py','GET',null)">OK</button>
+</td>
+</tr>
+</table>
+</body>
+</html>
+

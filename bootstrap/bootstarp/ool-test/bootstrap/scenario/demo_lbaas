@@ -1,0 +1,20 @@
+[AUTH]
+ssh_user = root1234
+
+[AP]
+manager_template = Lbaas_Instance_deb_manager.template
+agent_template = Lbaas_Instance_deb_agent.template
+
+[INSTANCE]
+instance_type = m1.tiny
+key_name = key1
+subnet_name = private1_sub1
+
+[EXTEND]
+lbaas = True
+
+[LBAAS]
+lb_method = ROUND_ROBIN
+protocol = HTTP
+protocol_port = 80
+subnet_name = private1_sub1

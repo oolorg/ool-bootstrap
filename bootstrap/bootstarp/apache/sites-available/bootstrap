@@ -1,0 +1,19 @@
+<VirtualHost *:18080>
+
+    ServerName www.ool.test
+    DocumentRoot /usr/lib/ool-test/bootstrap/web
+    Loglevel debug
+
+    <Directory /usr/lib/ool-test/bootstrap/web>
+        Order allow,deny
+        Allow from all
+    </Directory>
+
+    WSGIDaemonProcess papa.djangoserver user=bootstrap group=bootstrap processes=2 threads=15 display-name=%{GROUP}
+    WSGIProcessGroup papa.djangoserver
+
+    WSGIScriptAlias / /usr/lib/ool-test/bootstrap/web/bootstrap.wsgi
+    ErrorLog /var/log/bootstrap/error.log
+    LogLevel debug
+    CustomLog /var/log/bootstrap/access.log combined
+</VirtualHost>

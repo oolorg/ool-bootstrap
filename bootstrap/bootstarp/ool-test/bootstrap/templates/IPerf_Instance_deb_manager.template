@@ -1,0 +1,180 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation iperf Template Manager_Instance: Measure the throughput. controll the agent.",
+
+  "Parameters" : {
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String"
+    },
+    "ProvHost" : {
+      "Type" : "String"
+    },
+    "SubnetId" : {
+      "Type" : "String",
+      "Description" : "Id of an existing subnet"
+    },
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "m1.tiny", "m1.small", "m1.medium", "m1.large", "m1.xlarge" ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "LinuxDistribution": {
+      "Default": "U12",
+      "Description" : "Distribution of choice",
+      "Type": "String",
+      "AllowedValues" : [ "U12" ]
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "m1.tiny"    : { "Arch" : "64" },
+      "m1.small"    : { "Arch" : "64" },
+      "m1.medium"    : { "Arch" : "64" },
+      "m1.large"   : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" }
+    },
+    "DistroArch2AMI": {
+      "U12"      : { "64" : "U12-x86_64-cfntools-review" }
+    }
+  },
+
+  "Resources" : {
+    "IperfMan": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "services" : {
+              "sysvinit" : {
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "SubnetId" : { "Ref" : "SubnetId" },
+        "AvailabilityZone" : {"Ref": "ProvHost"},
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "ifconfig eth0 mtu 1422\n",
+          "apt-get install iperf -y\n",
+          "apt-get install python-matplotlib -y\n",
+          "mkdir /usr/lib/verification\n",
+          "mkdir /usr/lib/verification/cgi-bin\n",
+          "cat > /usr/lib/verification/cgi-bin/execute.py <<EOF\n",
+          "#!/usr/bin/env python\n",
+          "\n",
+          "import subprocess\n",
+          "import os\n",
+          "import commands\n",
+          "import matplotlib\n",
+          "matplotlib.use('Agg')\n",
+          "\n",
+          "from pylab import *\n",
+          "fpath = os.path.abspath(os.path.dirname(__file__)) + \"/../ipaddress.txt\"\n",
+          "CURL_ORG=\"curl -s -X POST 'http://%s:18000/cgi-bin/verify.py' -d '%s'\"\n",
+          "CURL_OPT=\" -d '%s'\"\n",
+          "VERIFY_COUNT=5\n",
+          "COUNT=sum(1 for line in open(fpath))\n",
+          "f = open(fpath)\n",
+          "targets=[]\n",
+          "for ip in f:\n",
+          "    targets.append(ip.strip('\\n'))\n",
+          "f.close()\n",
+          "\n",
+          "f = open(fpath)\n",
+          "fig = plt.figure(1, figsize=(8, 3*COUNT))\n",
+          "for i, ip in enumerate(f):\n",
+          "    send_ip=ip.strip('\\n')\n",
+          "    plt.subplot(COUNT, 1, i+1)\n",
+          "    for target in targets:\n",
+          "        if target == send_ip:\n",
+          "            continue\n",
+          "        tmp = CURL_ORG % (send_ip, \"&selfip=\" + send_ip + \"&count=\" + str(VERIFY_COUNT)) + CURL_OPT % (\"&ip=\" + target)\n",
+          "        ret = commands.getoutput(tmp)\n",
+          "        data=[]\n",
+          "        x=[]\n",
+          "        ii=1\n",
+          "        for d in ret.split(','):\n",
+          "            if len(d):\n",
+          "                data.append(float(d))\n",
+          "                x.append(int(ii))\n",
+          "                ii+=1\n",
+          "        if len(data):\n",
+          "            plt.plot(x, data, label = \"for \" + target, marker=\"o\")\n",
+          "    plt.legend(loc = 'upper right', prop={'size':8})\n",
+          "    plt.xlim([0.5, VERIFY_COUNT+1.5])\n",
+          "    plt.ylim(ymin=0)\n",
+          "    plt.xticks(range(1, VERIFY_COUNT+1))\n",
+          "    plt.title('Througput of ' + send_ip, fontsize = 16)\n",
+          "    plt.ylabel('Throughput (MByte)', fontsize = 12)\n",
+          "    plt.xlabel('Cycle', fontsize = 12)\n",
+          "plt.subplots_adjust(hspace = 0.6)\n",
+          "fig.savefig(os.path.abspath(os.path.dirname(__file__)) + \"/../result.png\")\n",
+          "f.close()\n",
+          "commands.getoutput(\"/usr/bin/python \" + os.path.abspath(os.path.dirname(__file__)) + \"/verify_result.py\")\n",
+          "EOF\n",
+          "chmod 755 /usr/lib/verification/cgi-bin/execute.py\n",
+          "cat > /usr/lib/verification/cgi-bin/verify_result.py <<EOF\n",
+          "#!/usr/bin/env python\n",
+          "\n",
+          "import os\n",
+          "import sys\n",
+          "from string import Template\n",
+          "import base64\n",
+          "import datetime\n",
+          "\n",
+          "def get_now():\n",
+          "        now = datetime.datetime.now()\n",
+          "        return now.strftime(\"%Y/%m/%d %H:%M:%S\")\n",
+          "\n",
+          "f=open(\"/usr/lib/verification/template/result.tmpl\")\n",
+          "data=f.read()\n",
+          "tmpl=Template(unicode(data,\"utf-8\",\"ignore\"))\n",
+          "fpath = os.path.abspath(os.path.dirname(__file__)) + \"/../result.png\"\n",
+          "img=open(fpath)\n",
+          "img_enc=base64.b64encode(img.read())\n",
+          "ret=\"<img src='data:image/png;base64,\"+img_enc+\"'>\"\n",
+          "ret+=\"<br>Creation Date : \" + get_now()\n",
+          "body=tmpl.substitute({\"body\":ret.encode(\"utf-8\")})\n",
+          "fw=open(os.path.abspath(os.path.dirname(__file__)) + \"/../result.html\", \"w\")\n",
+          "fw.write(body)\n",
+          "f.close()\n",
+          "img.close()\n",
+          "EOF\n",
+          "chmod 755 /usr/lib/verification/cgi-bin/verify_result.py\n",
+          "mkdir /usr/lib/verification/template\n",
+          "#chown -R openstack:openstack /usr/lib/verification/template\n",
+          "cat > /usr/lib/verification/template/result.tmpl <<EOF\n",
+          "<html>\n",
+          "<head>\n",
+          "<meta content-type=\"text/html\" charset=\"UTF-8\">\n",
+          "<title>Bootstrap for Verification</title>\n",
+          "</head>\n",
+          "<body>\n",
+          "<div align=\"center\">\n",
+          "\\${body}\n",
+          "</div>\n",
+          "</body>\n",
+          "</html>\n",
+          "EOF\n",
+          "sudo sh -c \"echo 'StrictHostKeyChecking=no' >> /etc/ssh/ssh_config\"\n"
+        ]]}}
+      }
+    }
+  },
+
+  "Outputs" : {
+  }
+}

@@ -1,0 +1,13 @@
+
+function progress() {
+  echo "wait.."
+  dot="."
+  while :
+  do
+    jobs %1 > /dev/null 2>&1
+    [ $? = 0 ] || break
+    echo -n ${dot}
+    sleep 0.5
+  done;
+    echo -e "\n"
+}
