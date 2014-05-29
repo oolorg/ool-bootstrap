@@ -81,12 +81,22 @@ def get_ns_name(net_id):
 	return quantum.agent.dhcp_agent.NS_PREFIX + net_id
 
 def availability_zone_create():
+	aggregates = nova_client.aggregates.list()
+	default_ag = None
+	for a in aggregates:
+		value = getattr(a, 'availability_zone', '')
+		if value == 'nova':
+			default_ag = a
+			break
+	if default_ag == None:
+		default_ag = nova_client.aggregates.create('default', 'nova')
 	services = get_services(binary='nova-compute')
 	for s in services:
 		if s['status'] == 'enabled' and s['state'] == 'up':
 			if "az-%s" % (s['host']) not in s['zone']:
 				aggregate = nova_client.aggregates.create("ag-%s" % s['host'], "az-%s" % s['host'])
 				aggregate_tmp = nova_client.aggregates.add_host(aggregate, s['host'])
+				default_ag_tmp = nova_client.aggregates.add_host(default_ag, s['host'])
                         	log.debug("create az-%s." % s['host'])
 				continue
 		log.debug("az-%s exist." % s['host'])
